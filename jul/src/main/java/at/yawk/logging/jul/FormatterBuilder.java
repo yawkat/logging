@@ -85,19 +85,31 @@ public class FormatterBuilder {
                 builder.append('[');
                 // who needs date formats?
                 if (date) {
-                    builder.append(calendar.get(Calendar.YEAR))
-                            .append('-')
-                            .append(calendar.get(Calendar.MONTH))
-                            .append('-')
-                            .append(calendar.get(Calendar.DAY_OF_MONTH));
+                    int y = calendar.get(Calendar.YEAR);
+                    int m = calendar.get(Calendar.MONTH);
+                    int d = calendar.get(Calendar.DAY_OF_MONTH);
+                    if (y < 10) { builder.append('0'); }
+                    builder.append(y);
+                    builder.append('-');
+                    if (m < 10) { builder.append('0'); }
+                    builder.append(m);
+                    builder.append('-');
+                    if (d < 10) { builder.append('0'); }
+                    builder.append(d);
                     if (time) { builder.append(' '); }
                 }
                 if (time) {
-                    builder.append(calendar.get(Calendar.HOUR_OF_DAY))
-                            .append(':')
-                            .append(calendar.get(Calendar.MINUTE))
-                            .append(':')
-                            .append(calendar.get(Calendar.SECOND));
+                    int h = calendar.get(Calendar.HOUR_OF_DAY);
+                    int m = calendar.get(Calendar.MINUTE);
+                    int s = calendar.get(Calendar.SECOND);
+                    if (h < 10) { builder.append('0'); }
+                    builder.append(h);
+                    builder.append(':');
+                    if (m < 10) { builder.append('0'); }
+                    builder.append(m);
+                    builder.append(':');
+                    if (s < 10) { builder.append('0'); }
+                    builder.append(s);
                 }
                 builder.append("] ");
             }
