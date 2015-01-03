@@ -2,10 +2,9 @@ package at.yawk.logging.jul;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Field;
 import java.util.Calendar;
-import java.util.logging.Formatter;
-import java.util.logging.Handler;
-import java.util.logging.LogRecord;
+import java.util.logging.*;
 
 /**
  * @author yawkat
@@ -16,6 +15,7 @@ public class FormatterBuilder {
     private boolean time;
     private boolean date;
     private boolean level;
+    private ColorMode colorMode = ColorMode.AUTO;
 
     private FormatterBuilder() {}
 
@@ -53,12 +53,47 @@ public class FormatterBuilder {
         return this;
     }
 
+    public FormatterBuilder colorMode(ColorMode mode) {
+        if (mode == null) { throw new NullPointerException("mode"); }
+        this.colorMode = mode;
+        return this;
+    }
+
     public Formatter build() {
-        return new FormatterImpl(time, date, level);
+        return build(false); // assume this isn't a console handler
+    }
+
+    private Formatter build(boolean isConsoleHandler) {
+        boolean color = false;
+        switch (colorMode) {
+        case AUTO:
+            // no color if we aren't in console
+            if (isConsoleHandler && System.console() == null) { break; }
+        case ALWAYS:
+            color = true;
+            break;
+        }
+        return new FormatterImpl(time, date, level, color);
     }
 
     public void build(Handler handler) {
-        handler.setFormatter(build());
+        boolean isConsoleHandler = false;
+        if (handler instanceof ConsoleHandler) {
+            isConsoleHandler = true;
+        } else if (handler instanceof StreamHandler) {
+            // check if this is a StreamHandler with output set to stdout or stderr
+            try {
+                Field outputField = StreamHandler.class.getDeclaredField("output");
+                outputField.setAccessible(true);
+                Object output = outputField.get(handler);
+                isConsoleHandler =
+                        output == System.out ||
+                        output == System.err;
+
+                // ignore reflection and security exceptions
+            } catch (Exception ignored) {}
+        }
+        handler.setFormatter(build(isConsoleHandler));
     }
 
     private static class FormatterImpl extends Formatter {
@@ -67,11 +102,13 @@ public class FormatterBuilder {
         private final boolean time;
         private final boolean date;
         private final boolean level;
+        private final boolean ansiColor;
 
-        private FormatterImpl(boolean time, boolean date, boolean level) {
+        private FormatterImpl(boolean time, boolean date, boolean level, boolean ansiColor) {
             this.time = time;
             this.date = date;
             this.level = level;
+            this.ansiColor = ansiColor;
         }
 
         @Override
@@ -82,6 +119,7 @@ public class FormatterBuilder {
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTimeInMillis(millis);
 
+                if (ansiColor) { builder.append("\033[90m"); }
                 builder.append('[');
                 // who needs date formats?
                 if (date) {
@@ -116,11 +154,31 @@ public class FormatterBuilder {
 
             if (level) {
                 builder.append('[');
-                String levelName = record.getLevel().getName();
+                Level lvl = record.getLevel();
+                boolean resetColor = ansiColor;
+                if (ansiColor) {
+                    int levelValue = lvl.intValue();
+                    if (levelValue >= Level.SEVERE.intValue()) {
+                        builder.append("\033[31m"); // red
+                    } else if (levelValue >= Level.WARNING.intValue()) {
+                        builder.append("\033[33m"); // yellow
+                    } else if (levelValue >= Level.INFO.intValue()) {
+                        builder.append("\033[36m"); // cyan
+                    } else {
+                        resetColor = false;
+                    }
+                }
+                String levelName = lvl.getName();
                 // pad with spaces
                 for (int i = levelName.length(); i < MAX_LEVEL_LENGTH; i++) { builder.append(' '); }
                 builder.append(levelName);
+                if (resetColor) {
+                    builder.append("\033[90m");
+                }
                 builder.append("] ");
+                if (resetColor) {
+                    builder.append("\033[39m");
+                }
             }
 
             String message = record.getMessage();
