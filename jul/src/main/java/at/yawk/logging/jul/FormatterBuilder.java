@@ -124,7 +124,7 @@ public class FormatterBuilder {
                 // who needs date formats?
                 if (date) {
                     int y = calendar.get(Calendar.YEAR);
-                    int m = calendar.get(Calendar.MONTH);
+                    int m = calendar.get(Calendar.MONTH) + 1;
                     int d = calendar.get(Calendar.DAY_OF_MONTH);
                     if (y < 10) { builder.append('0'); }
                     builder.append(y);
