@@ -33,6 +33,7 @@ public abstract class LoggingScheduledThreadPoolExecutor extends ScheduledThread
                 try {
                     ((Future) r).get();
                 } catch (InterruptedException ignored) {
+                } catch (CancellationException ignored) {
                 } catch (ExecutionException e) {
                     t = e.getCause();
                 }
