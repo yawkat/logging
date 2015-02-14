@@ -1,6 +1,10 @@
 package at.yawk.logging.jul;
 
+import at.yawk.logging.ansi.Ansi;
+import at.yawk.logging.ansi.AnsiCode;
+import at.yawk.logging.ansi.SupportedAnsiCode;
 import java.util.logging.Handler;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -21,5 +25,19 @@ public class Loggers {
         for (Handler handler : replacements) {
             logger.addHandler(handler);
         }
+    }
+
+    public static AnsiCode getColor(Level level) {
+        int levelValue = level.intValue();
+        if (levelValue >= Level.SEVERE.intValue()) {
+            return SupportedAnsiCode.RED;
+        }
+        if (levelValue >= Level.WARNING.intValue()) {
+            return SupportedAnsiCode.YELLOW;
+        }
+        if (levelValue >= Level.INFO.intValue()) {
+            return SupportedAnsiCode.CYAN;
+        }
+        return Ansi.unsupportedCode();
     }
 }

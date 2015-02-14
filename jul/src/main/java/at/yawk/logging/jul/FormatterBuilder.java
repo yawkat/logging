@@ -1,5 +1,7 @@
 package at.yawk.logging.jul;
 
+import at.yawk.logging.ansi.Ansi;
+import at.yawk.logging.ansi.SupportedAnsiCode;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
@@ -68,7 +70,7 @@ public class FormatterBuilder {
         switch (colorMode) {
         case AUTO:
             // no color if we aren't in console
-            if (isConsoleHandler && System.console() == null) { break; }
+            if (isConsoleHandler && Ansi.isSupported()) { break; }
         case ALWAYS:
             color = true;
             break;
@@ -119,7 +121,7 @@ public class FormatterBuilder {
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTimeInMillis(millis);
 
-                if (ansiColor) { builder.append("\033[90m"); }
+                if (ansiColor) { builder.append(SupportedAnsiCode.DARK_GRAY); }
                 builder.append('[');
                 // who needs date formats?
                 if (date) {
@@ -159,11 +161,11 @@ public class FormatterBuilder {
                 if (ansiColor) {
                     int levelValue = lvl.intValue();
                     if (levelValue >= Level.SEVERE.intValue()) {
-                        builder.append("\033[31m"); // red
+                        builder.append(SupportedAnsiCode.RED);
                     } else if (levelValue >= Level.WARNING.intValue()) {
-                        builder.append("\033[33m"); // yellow
+                        builder.append(SupportedAnsiCode.YELLOW);
                     } else if (levelValue >= Level.INFO.intValue()) {
-                        builder.append("\033[36m"); // cyan
+                        builder.append(SupportedAnsiCode.CYAN);
                     } else {
                         resetColor = false;
                     }
@@ -173,11 +175,11 @@ public class FormatterBuilder {
                 for (int i = levelName.length(); i < MAX_LEVEL_LENGTH; i++) { builder.append(' '); }
                 builder.append(levelName);
                 if (resetColor) {
-                    builder.append("\033[90m");
+                    builder.append(SupportedAnsiCode.DARK_GRAY);
                 }
                 builder.append("] ");
                 if (resetColor) {
-                    builder.append("\033[39m");
+                    builder.append(SupportedAnsiCode.DEFAULT);
                 }
             }
 

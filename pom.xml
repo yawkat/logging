@@ -12,6 +12,7 @@
     <modules>
         <module>util</module>
         <module>jul</module>
+        <module>ansi</module>
     </modules>
 
     <build>
